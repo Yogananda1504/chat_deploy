@@ -16,6 +16,14 @@ const Home = ({ username, setUsername, room, setRoom, socket }) => {
             toast.error('Please enter both username and room');
             return; // Don't proceed further
         }
+        else if(username.trim === '' )
+        {
+            toast.errot('Enter username');
+        }
+        else if(room.trim === '')
+        {
+            toast.error('Enter Room');
+        }
        
         // Emit an event to check if the username is already taken
         socket.emit('check_username', { username, room });
