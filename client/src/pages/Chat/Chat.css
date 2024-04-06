@@ -1,34 +1,41 @@
 /* Chat.css */
 
-/* Set base font size */
-body {
-    font-size: 1rem; /* Set font size using rem */
-    margin: 0; /* Remove default body margin */
-}
-
 /* Main container */
 .ChatContainer {
     display: flex;
     flex-direction: row; /* Default to row, but will change on smaller screens */
     height: 100vh; /* Fill the viewport vertically */
     width: 100vw;
+    background-color: #f5f5f5; /* Add a light background color */
 }
 
 /* Users list */
 .UsersList {
     text-align: center;
-    flex: 1; /* Default size, will adjust on smaller screens */
-    background-color: white;
+    flex: 0.6; /* Decreased size to 80% of the original */
+    background-color: #ffffff; /* White background */
     overflow-y: auto; /* Enable vertical scrolling if content overflows */
     display: flex;
     flex-direction: column; /* Stack child elements vertically */
     justify-content: space-between; /* Push items to top and bottom */
+    border-right: 1px solid #e0e0e0; /* Add a border to separate from the activity section */
+    padding: 1rem;
 }
+
+
 
 .Leave {
     margin-top: auto; 
-    color: black;
-    background-color: red;
+    color: white; /* Change text color to white */
+    background-color: #e57373; /* Red color for leave button */
+    border: none; /* Remove border */
+    border-radius: 0.5rem; /* Add border radius */
+    padding: 0.5rem 1rem; /* Adjust padding */
+    cursor: pointer;
+}
+
+.Leave:hover {
+    background-color: #ef5350; /* Darker red color on hover */
 }
 
 /* Activity section */
@@ -42,7 +49,7 @@ body {
 /* Message display */
 .MessageDisplay {
     flex-grow: 1; /* Grow to take up available space */
-    background-color: #e0e0e0;
+    background-color: #ffffff; /* White background */
     padding: 1rem;
     overflow-y: auto; /* Enable vertical scrolling if content overflows */
 }
@@ -56,23 +63,26 @@ body {
 
 /* Sent message style */
 .sentMessage {
-    background-color: #4caf50; /* Green background for sent messages */
-    color: white; /* White text color for sent messages */
+    background-color: #64b5f6; /* Light blue background for sent messages */
+    color: #ffffff; /* White text color for sent messages */
     align-self: flex-end; /* Align sent messages to the right */
+    border-top-right-radius: 0; /* Remove top right border radius */
 }
 
 /* Received message style */
 .receivedMessage {
-    background-color: #f0f0f0; /* Light gray background for received messages */
-    color: black; /* Black text color for received messages */
+    background-color: #eeeeee; /* Light gray background for received messages */
+    color: #000000; /* Black text color for received messages */
     align-self: flex-start; /* Align received messages to the left */
+    border-top-left-radius: 0; /* Remove top left border radius */
 }
-
 /* Input section */
 .InputSection {
     display: flex;
     align-items: center; /* Align items vertically */
     padding: 1rem;
+    background-color: #ffffff; /* White background */
+    border-top: 1px solid #e0e0e0; /* Add border on top */
 }
 
 /* Input field */
@@ -80,6 +90,9 @@ body {
     flex-grow: 1; /* Grow to take up remaining space */
     padding: 0.5rem;
     margin-right: 1rem;
+    border: none; /* Remove border */
+    border-radius: 0.5rem; /* Add border radius */
+    outline: none; /* Remove outline */
 }
 
 /* Send button */
@@ -90,32 +103,34 @@ body {
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
+    outline: none; /* Remove outline */
 }
 
 .InputSection button:hover {
     background-color: #45a049;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
+/* Responsive design */
+@media (max-width: 600px) {
+    /* Adjust the layout for mobile screens */
     .ChatContainer {
-        flex-direction: column; /* Switch to a vertical layout on small screens */
+        flex-direction: column;
     }
-
     .UsersList, .ActivitySection {
-        width: 100%; /* Full width for better usability */
-        flex: none; /* Disable flex sizing to control size explicitly */
-        height: 50vh; /* Allocate half of the viewport height to each section */
-        overflow-y: auto; /* Ensure both sections can scroll independently */
+        width: 100%;
     }
-
-    /* Adapt the input section for smaller screens for better usability */
+    .UsersList {
+        height: 30vh; /* Set height to 30% of the viewport height */
+        overflow-y: scroll; /* Enable scrolling */
+    }
+    .ActivitySection {
+        height: 70vh; /* Set height to 70% of the viewport height */
+    }
+    .MessageDisplay {
+        height: 50vh; /* Set height to 50% of the viewport height */
+        overflow-y: scroll; /* Enable scrolling */
+    }
     .InputSection {
-        flex-direction: column; /* Stack input and button vertically */
-    }
-
-    .InputSection input, .InputSection button {
-        width: 100%; /* Full width inputs and buttons for easier touch */
-        margin: 0.5rem 0; /* Adjust margins for vertical layout */
+        height: 20vh; /* Set height to 20% of the viewport height */
     }
 }

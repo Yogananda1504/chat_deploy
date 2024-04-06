@@ -13,6 +13,7 @@ const io = socketIO(server, {
     },
 });
 
+
 app.use(cors());
 app.use(express.json());
 
@@ -53,6 +54,30 @@ app.get('/api/chat/:room', async (req, res) => {
 
 io.on('connection', (socket) => {
     console.log('New client connected');
+  
+    socket.on('pseudo_join', async ({  room }) => {
+      
+        socket.join(room);
+    })
+
+    socket.on('check_username', async ({ username, room }) => {
+        console.log(`Checking if username ${username} is taken in room ${room}`);
+        try {
+            // Check if the username is already taken in the room
+            const user = await ActiveUser.findOne({ username, room });
+            if (user) {
+                // If the username is taken, emit an event to the client
+                socket.emit('username_taken', true);
+            } else {
+                // If the username is not taken, emit an event to the client
+                socket.emit('username_taken', false);
+            }
+        } catch (error) {
+            console.error('Error checking username:', error);
+        }
+    });
+
+
 
     socket.on('join_room', async ({ username, room }) => {
         console.log(`${username} is trying to join the room ${room}`);
@@ -105,15 +130,16 @@ io.on('connection', (socket) => {
 
 
     socket.on('send_message', async ({ username, message, room }, callback) => {
-        console.log(`${username} is sending a message in the room ${room}`);
+        
         try {
+            console.log(`${username} is sending a message in the room ${room}`);
             // Save message to MongoDB
             const newMessage = new Message({ username, message, room });
             await newMessage.save();
 
             // Broadcast the message to all users in the room
             io.to(room).emit('receive_message', { username, message });
-
+            
            
 
             

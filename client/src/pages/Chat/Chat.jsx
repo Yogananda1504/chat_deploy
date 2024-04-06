@@ -1,110 +1,121 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import './Chat.css'; // Import CSS file for styling
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import './Chat.css';
 
-function Chat({ username, socket }) {
-    const [message, setMessage] = useState(''); 
-    const [receivedMessages, setReceivedMessages] = useState([]); 
+function Chat({ username, socket, joinRoom }) {
+    const [message, setMessage] = useState('');
+    const [receivedMessages, setReceivedMessages] = useState([]);
     const [users, setUsers] = useState([]);
     const { room } = useParams();
     const navigate = useNavigate();
 
-    const fetchdata = async () => {
-        try {
-            console.log('Fetching data...');
-            const res = await axios.get(`http://localhost:4000/api/chat/${room}`);
-            if (res.data) {
-                setReceivedMessages(res.data.Messages);
-                setUsers(res.data.users);
-                console.log('Data fetched successfully');
-            } else {
-                console.log('No data received from the server');
+    useEffect(() => {
+        if (!socket || !room) return;
+
+        socket.emit('pseudo_join', { username, room });
+
+        return () => {
+            // Cleanup function if needed
+        };
+    }, [socket, room, joinRoom, username]);
+
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('receive_message', handleMessage);
+        socket.on('chatroom_users', handleUserList);
+        socket.on('welcome_message', handleWelcomeMessage);
+        socket.on('system_message', handleSystemMessage);
+        socket.on('left_room', handleLeftRoom);
+
+        return () => {
+            socket.off('receive_message', handleMessage);
+            socket.off('chatroom_users', handleUserList);
+            socket.off('welcome_message', handleWelcomeMessage);
+            socket.off('system_message', handleSystemMessage);
+            socket.off('left_room', handleLeftRoom);
+        };
+    }, [socket, username, room]);
+
+    useEffect(() => {
+        if (!room || !socket) return;
+
+        const fetchData = async () => {
+            try {
+                const res = await axios.get(`http://localhost:4000/api/chat/${room}`);
+                if (res.data) {
+                    setReceivedMessages(res.data.Messages);
+                    setUsers(res.data.users);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                toast.error('Failed to fetch chat data');
             }
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-    }
-
-    useEffect(() => {
-        fetchdata();
-    },[]);
-
-    useEffect(() => {
-       
-    
-        // Listen for incoming messages from the socket
-        socket.on('receive_message', (data) => {
-            console.log('Received message:', data);
-            // Update the state with the received message
-            setReceivedMessages((prevMessages) => [...prevMessages, data]);
-        });
-    
-        // Cleanup function to remove event listener when component unmounts
-        return () => {
-            socket.off('receive_message');
-            
         };
-    }, [socket,receivedMessages]); // Include socket in the dependency array
 
-    useEffect(() => {
-        // Check if socket is connected before setting up event listeners
-        if (socket.connected) {
-            // Listen for incoming messages from the socket
-            socket.on('chatroom_users', (data) => {
-                console.log('Received updated user list:', data);
-                setUsers(data); // Update the list of users in the room
-            });
-            socket.on('welcome_message', (data) => {
-                console.log('Received welcome message:', data);
-                setReceivedMessages((prevMessages) => [...prevMessages, data]); // Display welcome message
-            });
-            socket.on('system_message', (data) => {
-                console.log('Received system message:', data);
-                setReceivedMessages((prevMessages) => [...prevMessages, data]); // Display system message
-            });
-            socket.on('left_room', (data) => {
-                console.log('Received user left message:', data);
-                // Update the list of users after removing the user who left the room
-                setUsers((prevUsers) => prevUsers.filter(user => user.username !== data.username));
-                // Update the received messages to display the leaving message
-                setReceivedMessages((prevMessages) => [...prevMessages, data]);
-            });
-        }
+        fetchData();
 
-        // Cleanup function to remove event listeners when component unmounts
         return () => {
-            socket.off('chatroom_users');
-            socket.off('welcome_message');
-            socket.off('system_message');
-            socket.off('left_room');
+            // No cleanup needed for fetchData
         };
-    }, [socket,users,receivedMessages]); // Include socket in the dependency array
+    }, [room, socket]);
+
+    const handleMessage = (data) => {
+        setReceivedMessages(prevMessages => [...prevMessages, data]);
+    };
+
+    const handleUserList = (data) => {
+        setUsers(data);
+    };
+
+    const handleWelcomeMessage = (data) => {
+        console.log(`Welcome ${useranme}`);
+        toast.success(`Welcome ${username}`);
+    };
+
+    const handleSystemMessage = (data) => {
+        setReceivedMessages(prevMessages => [...prevMessages, data]);
+    };
+
+    const handleLeftRoom = (data) => {
+        setUsers(prevUsers => prevUsers.filter(user => user.username !== data.username));
+        setReceivedMessages(prevMessages => [...prevMessages, data]);
+    };
 
     const handleMessageSend = () => {
-        // Logic to send message
+        if (message.trim() === '') return;
+
         socket.emit('send_message', {
             username: username,
             message: message,
             room: room
         });
-        // Clear the message input after sending
-        setMessage('');
+
+        setMessage(''); // Clear input after sending message
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleMessageSend();
+        }
     };
 
     const handleLeave = () => {
-        socket.emit('leave_room', { username, room }); // Send leave_room event to the server
-        // Navigate to the home page
+        socket.emit('leave_room', { username, room });
         navigate('/');
     };
 
     return (
         <div className='ChatContainer'>
+            <ToastContainer />
             <div className='UsersList'>
                 <h3>Users in {room}</h3>
                 <ul>
                     {users.map((user, index) => (
-                        <li key={index}>{user.username}</li>
+                        <li style={{ listStyle: 'none' }} key={index}>{user.username}</li>
                     ))}
                 </ul>
                 <button className='Leave' onClick={handleLeave}>Leave</button>
@@ -126,6 +137,7 @@ function Chat({ username, socket }) {
                         placeholder='Type your message...'
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={handleKeyPress} // Replace onKeyPress with onKeyDown
                     />
                     <button onClick={handleMessageSend}>Send</button>
                 </div>

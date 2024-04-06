@@ -1,26 +1,52 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import './Home.css';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify'; // Import ToastContainer along with toast
+import 'react-toastify/dist/ReactToastify.css'; // Import the CSS for toastify
 
 const Home = ({ username, setUsername, room, setRoom, socket }) => {
     const navigate = useNavigate();
-
+   
     const joinRoom = (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default form submission behavior
 
         if (username.trim() === '' || room.trim() === '') {
+            // Show notification if either username or room is empty
             toast.error('Please enter both username and room');
-            return;
+            return; // Don't proceed further
         }
-
-        socket.emit('join_room', { username, room });
-        navigate(`/chat/${room}`, { replace: true });
+       
+        // Emit an event to check if the username is already taken
+        socket.emit('check_username', { username, room });
     }
+
+    // UseEffect to handle the response from the server
+    useEffect(() => {
+        const handleUsernameTaken = (usernameTaken) => {
+            if (usernameTaken) {
+                // If username is already taken, show an error toast
+                toast.error('Username is already taken');
+            } else {
+                // If username is available, emit an event to join the room
+                socket.emit('join_room', { username, room });
+                // Navigate to the chat page
+                navigate(`/chat/${room}`, { replace: true });
+            }
+        };
+
+        // Listen for the response from the server
+        socket.on('username_taken', handleUsernameTaken);
+
+        // Cleanup the event listener when component unmounts
+        return () => {
+            socket.off('username_taken', handleUsernameTaken);
+        };
+    }, [navigate, room, socket, username]);
 
     return (
         <div className='Container'>
-            <h2>DevRooms</h2>
+            <h2>{'<>'}DevRooms{'</>'}</h2>
             <form onSubmit={joinRoom}>
                 <input
                     className='Devrooms_input'
@@ -30,7 +56,7 @@ const Home = ({ username, setUsername, room, setRoom, socket }) => {
                     placeholder='Username...'
                     required
                 />
-
+                
                 <select
                     className='DevRooms_options'
                     value={room}
@@ -45,6 +71,7 @@ const Home = ({ username, setUsername, room, setRoom, socket }) => {
                 </select>
                 <button className='DevRooms_button' type="submit"> Join Room </button>
             </form>
+            <ToastContainer />
         </div>
     );
 };
