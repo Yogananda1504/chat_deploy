@@ -20,6 +20,23 @@
     justify-content: space-between; /* Push items to top and bottom */
     border-right: 1px solid #e0e0e0; /* Add a border to separate from the activity section */
     padding: 1rem;
+    transition: all 0.3s ease; /* Add transition for smooth animation */
+}
+
+.UsersList:hover {
+    box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Add shadow on hover */
+    transform: scale(1.02); /* Slightly increase size on hover */
+}
+.USER {
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    background-color: #f0f0f0;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.USER:hover {
+    background-color: #e0e0e0;
 }
 
 
@@ -45,13 +62,17 @@
     flex-direction: column; /* Stack child elements vertically */
     height: 100%; /* Fill the available space vertically */
 }
-
 /* Message display */
 .MessageDisplay {
     flex-grow: 1; /* Grow to take up available space */
     background-color: #ffffff; /* White background */
     padding: 1rem;
     overflow-y: auto; /* Enable vertical scrolling if content overflows */
+    border: 1px solid #e0e0e0; /* Add border for better distinction */
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.05); /* Add shadow for depth */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Add gap between messages */
 }
 
 /* Individual message */
@@ -59,6 +80,9 @@
     margin-bottom: 0.5rem; /* Add margin between messages */
     padding: 0.5rem;
     border-radius: 0.5rem;
+    transition: all 0.3s ease; /* Add transition for smooth animation */
+    width: fit-content;
+    max-width: 80%; /* Limit the width of the message to 80% of the container */
 }
 
 /* Sent message style */
@@ -67,6 +91,8 @@
     color: #ffffff; /* White text color for sent messages */
     align-self: flex-end; /* Align sent messages to the right */
     border-top-right-radius: 0; /* Remove top right border radius */
+    border-radius: 15px; /* Add border radius */
+    padding: 1rem; /* Increase padding */
 }
 
 /* Received message style */
@@ -75,14 +101,32 @@
     color: #000000; /* Black text color for received messages */
     align-self: flex-start; /* Align received messages to the left */
     border-top-left-radius: 0; /* Remove top left border radius */
+    border-radius: 15px; /* Add border radius */
+    padding: 1rem; /* Increase padding */
 }
+
+.sent_by {
+    font-weight: bold; /* Make the username bold */
+    color: #333; /* Dark gray color */
+    margin-bottom: 0.5rem; /* Add some space below the username */
+    transition: all 0.3s ease; /* Add transition for smooth animation */
+}
+
+.sent_by:hover {
+    color: black; /* Change color to tomato on hover */
+}
+
+
+
+
 /* Input section */
 .InputSection {
     display: flex;
     align-items: center; /* Align items vertically */
     padding: 1rem;
-    background-color: #ffffff; /* White background */
+    background-color: #f5f5f5; /* Light gray background */
     border-top: 1px solid #e0e0e0; /* Add border on top */
+    box-shadow: 0px -4px 10px rgba(0,0,0,0.1); /* Add shadow for depth */
 }
 
 /* Input field */
@@ -93,6 +137,16 @@
     border: none; /* Remove border */
     border-radius: 0.5rem; /* Add border radius */
     outline: none; /* Remove outline */
+    font-size: 1rem; /* Increase font size */
+    color: #333; /* Dark gray color */
+    background-color: #fff; /* White background */
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1); /* Add shadow for depth */
+}
+
+/* Placeholder style */
+.InputSection input::placeholder {
+    color: #999; /* Light gray color */
+    font-style: italic; /* Italic font style */
 }
 
 /* Send button */
@@ -104,33 +158,49 @@
     border-radius: 0.5rem;
     cursor: pointer;
     outline: none; /* Remove outline */
+    font-size: 1rem; /* Increase font size */
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1); /* Add shadow for depth */
 }
 
 .InputSection button:hover {
     background-color: #45a049;
 }
 
-/* Responsive design */
-@media (max-width: 600px) {
-    /* Adjust the layout for mobile screens */
+@media (max-width: 768px) {
     .ChatContainer {
-        flex-direction: column;
+        padding: 10px;
     }
-    .UsersList, .ActivitySection {
-        width: 100%;
-    }
-    .UsersList {
-        height: 30vh; /* Set height to 30% of the viewport height */
-        overflow-y: scroll; /* Enable scrolling */
-    }
+
     .ActivitySection {
-        height: 70vh; /* Set height to 70% of the viewport height */
+        flex: 2; /* Adjust flex value */
     }
-    .MessageDisplay {
-        height: 50vh; /* Set height to 50% of the viewport height */
-        overflow-y: scroll; /* Enable scrolling */
+
+    .UsersList {
+        position: absolute; /* Position users list */
+        top: 0;
+        right: 0;
+        z-index: 1; /* Ensure users list is above other content */
+        transition: right 0.3s; /* Add transition for smooth animation */
     }
+
+    .UsersList:hover {
+        right: 50%; /* Move users list to the left on hover */
+        transform: translateX(50%); /* Center users list horizontally */
+    }
+
+    .Leave {
+        position: absolute; /* Position leave button */
+        top: 0;
+        left: 0;
+    }
+
     .InputSection {
-        height: 20vh; /* Set height to 20% of the viewport height */
+        flex-direction: column; /* Stack input and button vertically */
+        align-items: stretch;
+    }
+
+    .InputSection input {
+        margin-bottom: 10px;
+        margin-right: 0;
     }
 }

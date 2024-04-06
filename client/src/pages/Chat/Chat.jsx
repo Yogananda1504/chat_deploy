@@ -72,7 +72,7 @@ function Chat({ username, socket, joinRoom }) {
     };
 
     const handleWelcomeMessage = (data) => {
-        console.log(`Welcome ${useranme}`);
+        console.log(`Welcome ${username}`);
         toast.success(`Welcome ${username}`);
     };
 
@@ -115,7 +115,7 @@ function Chat({ username, socket, joinRoom }) {
                 <h3>Users in {room}</h3>
                 <ul>
                     {users.map((user, index) => (
-                        <li style={{ listStyle: 'none' }} key={index}>{user.username}</li>
+                        <li className='USER' style={{ listStyle: 'none' }} key={index}>{user.username}</li>
                     ))}
                 </ul>
                 <button className='Leave' onClick={handleLeave}>Leave</button>
@@ -126,7 +126,7 @@ function Chat({ username, socket, joinRoom }) {
                     {/* Display received messages */}
                     {receivedMessages.map((msg, index) => (
                         <div key={index} className={msg.username === username ? 'sentMessage' : 'receivedMessage'}>
-                            <span>{msg.username}: </span>
+                            <div className='sent_by'>{msg.username} </div>
                             <span>{msg.message}</span>
                         </div>
                     ))}
