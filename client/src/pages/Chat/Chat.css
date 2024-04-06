@@ -1,0 +1,121 @@
+/* Chat.css */
+
+/* Set base font size */
+body {
+    font-size: 1rem; /* Set font size using rem */
+    margin: 0; /* Remove default body margin */
+}
+
+/* Main container */
+.ChatContainer {
+    display: flex;
+    flex-direction: row; /* Default to row, but will change on smaller screens */
+    height: 100vh; /* Fill the viewport vertically */
+    width: 100vw;
+}
+
+/* Users list */
+.UsersList {
+    text-align: center;
+    flex: 1; /* Default size, will adjust on smaller screens */
+    background-color: white;
+    overflow-y: auto; /* Enable vertical scrolling if content overflows */
+    display: flex;
+    flex-direction: column; /* Stack child elements vertically */
+    justify-content: space-between; /* Push items to top and bottom */
+}
+
+.Leave {
+    margin-top: auto; 
+    color: black;
+    background-color: red;
+}
+
+/* Activity section */
+.ActivitySection {
+    flex: 3; /* Default size, will adjust on smaller screens */
+    display: flex;
+    flex-direction: column; /* Stack child elements vertically */
+    height: 100%; /* Fill the available space vertically */
+}
+
+/* Message display */
+.MessageDisplay {
+    flex-grow: 1; /* Grow to take up available space */
+    background-color: #e0e0e0;
+    padding: 1rem;
+    overflow-y: auto; /* Enable vertical scrolling if content overflows */
+}
+
+/* Individual message */
+.Message {
+    margin-bottom: 0.5rem; /* Add margin between messages */
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+/* Sent message style */
+.sentMessage {
+    background-color: #4caf50; /* Green background for sent messages */
+    color: white; /* White text color for sent messages */
+    align-self: flex-end; /* Align sent messages to the right */
+}
+
+/* Received message style */
+.receivedMessage {
+    background-color: #f0f0f0; /* Light gray background for received messages */
+    color: black; /* Black text color for received messages */
+    align-self: flex-start; /* Align received messages to the left */
+}
+
+/* Input section */
+.InputSection {
+    display: flex;
+    align-items: center; /* Align items vertically */
+    padding: 1rem;
+}
+
+/* Input field */
+.InputSection input {
+    flex-grow: 1; /* Grow to take up remaining space */
+    padding: 0.5rem;
+    margin-right: 1rem;
+}
+
+/* Send button */
+.InputSection button {
+    padding: 0.8rem 1.2rem;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+}
+
+.InputSection button:hover {
+    background-color: #45a049;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .ChatContainer {
+        flex-direction: column; /* Switch to a vertical layout on small screens */
+    }
+
+    .UsersList, .ActivitySection {
+        width: 100%; /* Full width for better usability */
+        flex: none; /* Disable flex sizing to control size explicitly */
+        height: 50vh; /* Allocate half of the viewport height to each section */
+        overflow-y: auto; /* Ensure both sections can scroll independently */
+    }
+
+    /* Adapt the input section for smaller screens for better usability */
+    .InputSection {
+        flex-direction: column; /* Stack input and button vertically */
+    }
+
+    .InputSection input, .InputSection button {
+        width: 100%; /* Full width inputs and buttons for easier touch */
+        margin: 0.5rem 0; /* Adjust margins for vertical layout */
+    }
+}
