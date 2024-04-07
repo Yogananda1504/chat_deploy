@@ -1,13 +1,10 @@
-FIRST INSTALL DOWNLOAD THE ZIP FILE OR CLONE THE REPOSITORY
-GO TO CLIENT FOLDER AND TYPE "npm i" in TERMINAL
-GO TO SERVER FOLDER AND TYPE "npm i" in TERMINAL
-Now in the index2.js  change the sockets origin connection which will be your localhost port of the client 
-Also change the MongoDB connection details 
-NOTE:# Project Name
+
 
 ## Description
 
-[Describe your project here]
+[DevRooms is a dynamic platform built for real-time communication within designated rooms. Developed using ReactJS for frontend, ExpressJS for server-side scripting, and MongoDB for data storage, its real-time messaging capabilities are powered by the Socket.IO API.
+
+Socket.IO is renowned for its event-driven architecture, making DevRooms an event-driven messaging platform where actions trigger events for seamless communication between users and the server.]
 
 ## Table of Contents
 
