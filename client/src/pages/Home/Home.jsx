@@ -36,6 +36,7 @@ const Home = ({ username, setUsername, room, setRoom, socket }) => {
                 // If username is already taken, show an error toast
                 toast.error('Username is already taken');
             } else {
+                
                 // If username is available, emit an event to join the room
                 socket.emit('join_room', { username, room });
                 // Navigate to the chat page

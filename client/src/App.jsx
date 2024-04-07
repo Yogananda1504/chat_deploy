@@ -5,6 +5,7 @@ import io from 'socket.io-client';
 import Chat from './pages/Chat/Chat';
 import Home from './pages/Home/Home';
 
+//creation of the socket connection 
 const socket = io.connect('http://localhost:4000');
 
 function App() {
