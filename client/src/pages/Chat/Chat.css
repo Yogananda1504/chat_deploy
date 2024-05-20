@@ -6,7 +6,7 @@
     flex-direction: row; /* Default to row, but will change on smaller screens */
     height: 100vh; /* Fill the viewport vertically */
     width: 100vw;
-    background-color: #f5f5f5; /* Add a light background color */
+    background-color: white; /* Add a light background color */
 }
 
 /* Users list */
@@ -25,7 +25,7 @@
 
 .UsersList:hover {
     box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Add shadow on hover */
-    transform: scale(1.02); /* Slightly increase size on hover */
+    transform: scale(1.00); /* Slightly increase size on hover */
 }
 .USER {
     padding: 0.5rem;

@@ -45,14 +45,31 @@ function Chat({ username, socket, joinRoom }) {
 
         const fetchData = async () => {
             try {
-                const res = await axios.get(`http://localhost:4000/api/chat/${room}`);
-                if (res.data) {
-                    setReceivedMessages(res.data.Messages);
-                    setUsers(res.data.users);
-                }
+                const res = await axios.get(`http://localhost:4000/api/chat/messages?room=${room}`, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                setReceivedMessages(res.data.Messages);
+                setUsers(res.data.users);
             } catch (error) {
-                console.error('Error fetching data:', error);
-                toast.error('Failed to fetch chat data');
+                if (error.response) {
+                    const status = error.response.status;
+                    if (status === 401) {
+                        navigate('/Forbidden');
+                    } else if (status === 404) {
+                        navigate('/Not-found');
+                    } else if (status === 500) {
+                        navigate('/Internal-error');
+                    } else {
+                        console.error('Error fetching data:', error);
+                        toast.error('Failed to fetch chat data');
+                    }
+                } else {
+                    console.error('Error fetching data:', error);
+                    toast.error('Failed to fetch chat data');
+                }
             }
         };
 
@@ -61,7 +78,7 @@ function Chat({ username, socket, joinRoom }) {
         return () => {
             // No cleanup needed for fetchData
         };
-    }, [room, socket]);
+    }, [room, socket, navigate]);
 
     const handleMessage = (data) => {
         setReceivedMessages(prevMessages => [...prevMessages, data]);
@@ -94,7 +111,7 @@ function Chat({ username, socket, joinRoom }) {
             room: room
         });
 
-        setMessage(''); // Clear input after sending message
+        setMessage('');
     };
 
     const handleKeyPress = (e) => {
@@ -123,7 +140,6 @@ function Chat({ username, socket, joinRoom }) {
 
             <div className='ActivitySection'>
                 <div className='MessageDisplay'>
-                    {/* Display received messages */}
                     {receivedMessages.map((msg, index) => (
                         <div key={index} className={msg.username === username ? 'sentMessage' : 'receivedMessage'}>
                             <div className='sent_by'>{msg.username} </div>
@@ -137,7 +153,7 @@ function Chat({ username, socket, joinRoom }) {
                         placeholder='Type your message...'
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={handleKeyPress} // Replace onKeyPress with onKeyDown
+                        onKeyDown={handleKeyPress}
                     />
                     <button onClick={handleMessageSend}>Send</button>
                 </div>

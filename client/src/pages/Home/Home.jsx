@@ -1,53 +1,49 @@
-
 import React, { useState, useEffect } from 'react';
 import './Home.css';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify'; // Import ToastContainer along with toast
-import 'react-toastify/dist/ReactToastify.css'; // Import the CSS for toastify
+import { toast, ToastContainer } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css'; 
 
 const Home = ({ username, setUsername, room, setRoom, socket }) => {
     const navigate = useNavigate();
-   
-    const joinRoom = (e) => {
-        e.preventDefault(); // Prevent default form submission behavior
+
+    const joinRoom = async (e) => {
+        e.preventDefault();
 
         if (username.trim() === '' || room.trim() === '') {
-            // Show notification if either username or room is empty
             toast.error('Please enter both username and room');
-            return; // Don't proceed further
+            return;
         }
-        else if(username.trim === '' )
-        {
-            toast.errot('Enter username');
-        }
-        else if(room.trim === '')
-        {
-            toast.error('Enter Room');
-        }
-       
+
         // Emit an event to check if the username is already taken
         socket.emit('check_username', { username, room });
-    }
+    };
 
-    // UseEffect to handle the response from the server
     useEffect(() => {
-        const handleUsernameTaken = (usernameTaken) => {
-            if (usernameTaken) {
-                // If username is already taken, show an error toast
+        const handleUsernameTaken = (isTaken) => {
+            if (isTaken) {
                 toast.error('Username is already taken');
             } else {
-                
-                // If username is available, emit an event to join the room
-                socket.emit('join_room', { username, room });
-                // Navigate to the chat page
-                navigate(`/chat/${room}`, { replace: true });
+                generateTokenAndJoinRoom();
             }
         };
 
-        // Listen for the response from the server
+        const generateTokenAndJoinRoom = async () => {
+            try {
+                const res = await axios.post(`http://localhost:4000/api/generate-token?room=${room}&username=${username}`);
+                const token = res.data.token;
+                localStorage.setItem('token', token);
+                socket.emit('join_room', { username, room });
+                navigate(`/chat/${room}`);
+            } catch (error) {
+                console.error('Error generating token:', error);
+                toast.error('Error generating token');
+            }
+        };
+
         socket.on('username_taken', handleUsernameTaken);
 
-        // Cleanup the event listener when component unmounts
         return () => {
             socket.off('username_taken', handleUsernameTaken);
         };
@@ -65,7 +61,7 @@ const Home = ({ username, setUsername, room, setRoom, socket }) => {
                     placeholder='Username...'
                     required
                 />
-                
+
                 <select
                     className='DevRooms_options'
                     value={room}
