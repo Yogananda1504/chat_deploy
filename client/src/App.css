@@ -1,44 +1,47 @@
-* {
-  font-family: Arial;
+html * {
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
 }
 
 body {
-  background-color: black;
   margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+  padding: 0;
+  overflow: hidden;
+  background-color: rgb(16, 16, 17); /* Fixed the color format */
 }
-
-.Container {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  text-align: center;
+::-webkit-scrollbar {
+  width: 20px;
 }
-
-h2 {
-  margin-bottom: 20px;
+::-webkit-scrollbar-track {
+  background-color: transparent;
 }
-
-.Devrooms_input,
-.DevRooms_options,
-.DevRooms_button {
-  width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
-  margin-bottom: 10px;
+::-webkit-scrollbar-thumb {
+  background-color: #d6dee1;
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
 }
-
-.DevRooms_button {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
+::-webkit-scrollbar-thumb:hover {
+  background-color: #a8bbbf;
+}
+.btn {
+  padding: 14px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1.1rem;
   cursor: pointer;
+  border: none;
 }
-
-.DevRooms_button:hover {
-  background-color: #45a049;
+.btn-outline {
+  color: rgb(153, 217, 234);
+  border: 1px solid rgb(153, 217, 234);
+  background: rgb(63, 73, 204);
+}
+.btn-primary {
+  background: rgb(153, 217, 234);
+  color: rgb(0, 24, 111);
+}
+.btn-secondary {
+  background: rgb(0, 24, 111);
+  color: #fff;
 }

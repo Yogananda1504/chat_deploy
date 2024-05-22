@@ -1,0 +1,13 @@
+/* index.css */
+/* Global style for the body */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: black;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* Prevents overflow */
+  box-sizing: border-box; /* Ensures padding and border are included in the element's dimensions */
+}
+  
+  

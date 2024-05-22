@@ -26,32 +26,30 @@ function App() {
 
     return (
         <Router>
-            <div className='App'>
-                <Routes>
-                    <Route
-                        exact path='/'
-                        element={<Home username={username} setUsername={setUsername} room={room} setRoom={setRoom} socket={socket} />}
-                    />
-                    <Route
-                        exact path='/chat/:room'
-                        element={<Chat username={username} socket={socket} joinRoom={joinRoom} />}
-                    />
-                    <Route
-                        exact path='/Forbidden'
-                        element={<E_401 />}
-                    />
-                    <Route
-                        exact path='/Internal-error'
-                        element={<E_500 />}
-                    />
-                    <Route
-                        exact path='*' element={<E_404 />}
-                    />
+
+            <Routes>
+                <Route
+                    exact path='/'
+                    element={<Home username={username} setUsername={setUsername} room={room} setRoom={setRoom} socket={socket} />}
+                />
+                <Route
+                    exact path='/chat/:room'
+                    element={<Chat username={username} socket={socket} joinRoom={joinRoom} />}
+                />
+                <Route
+                    exact path='/Forbidden'
+                    element={<E_401 />}
+                />
+                <Route
+                    exact path='/Internal-error'
+                    element={<E_500 />}
+                />
+                <Route
+                    exact path='*' element={<E_404 />}
+                />
+            </Routes>
 
 
-
-                </Routes>
-            </div>
         </Router>
     );
 }

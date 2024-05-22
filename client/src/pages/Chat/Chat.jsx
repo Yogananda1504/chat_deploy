@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './Chat.css';
+import ContextMenu from './ContextMenu'; // Import the ContextMenu component
 
 function Chat({ username, socket, joinRoom }) {
     const [message, setMessage] = useState('');
@@ -11,6 +12,10 @@ function Chat({ username, socket, joinRoom }) {
     const [users, setUsers] = useState([]);
     const { room } = useParams();
     const navigate = useNavigate();
+    const messageDisplayRef = useRef(null);
+    const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+    const [contextMenuVisible, setContextMenuVisible] = useState(false);
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
         if (!socket || !room) return;
@@ -125,6 +130,55 @@ function Chat({ username, socket, joinRoom }) {
         navigate('/');
     };
 
+    const scrollToBottom = () => {
+        messageDisplayRef.current?.scrollTo({
+            top: messageDisplayRef.current.scrollHeight,
+            behavior: 'smooth',
+        });
+        setShowScrollToBottom(false); // Ensure the button disappears after scrolling
+    };
+
+    const handleScroll = () => {
+        if (messageDisplayRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = messageDisplayRef.current;
+            if (scrollHeight - scrollTop === clientHeight) {
+                setShowScrollToBottom(false);
+            } else {
+                setShowScrollToBottom(true);
+            }
+        }
+    };
+
+    const handleContextMenu = (e) => {
+        e.preventDefault();
+        const rect = e.target.getBoundingClientRect();
+        setContextMenuVisible(true);
+        setContextMenuPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    };
+
+    const closeContextMenu = () => {
+        setContextMenuVisible(false);
+    };
+
+    useEffect(() => {
+        // Function to close context menu
+        const closeOnOutsideClick = (e) => {
+            if (contextMenuVisible) {
+                closeContextMenu();
+            }
+        };
+
+        // Add event listener when context menu is visible
+        if (contextMenuVisible) {
+            document.addEventListener('click', closeOnOutsideClick);
+        }
+
+        // Cleanup: remove event listener when context menu is not visible
+        return () => {
+            document.removeEventListener('click', closeOnOutsideClick);
+        };
+    }, [contextMenuVisible]);
+
     return (
         <div className='ChatContainer'>
             <ToastContainer />
@@ -138,8 +192,8 @@ function Chat({ username, socket, joinRoom }) {
                 <button className='Leave' onClick={handleLeave}>Leave</button>
             </div>
 
-            <div className='ActivitySection'>
-                <div className='MessageDisplay'>
+            <div className='ActivitySection' onContextMenu={handleContextMenu}>
+                <div className='MessageDisplay' ref={messageDisplayRef} onScroll={handleScroll}>
                     {receivedMessages.map((msg, index) => (
                         <div key={index} className={msg.username === username ? 'sentMessage' : 'receivedMessage'}>
                             <div className='sent_by'>{msg.username} </div>
@@ -147,6 +201,16 @@ function Chat({ username, socket, joinRoom }) {
                         </div>
                     ))}
                 </div>
+                {contextMenuVisible && (
+                    <ContextMenu
+                        x={contextMenuPosition.x}
+                        y={contextMenuPosition.y}
+                        onClose={closeContextMenu}
+                    />
+                )}
+                {showScrollToBottom && (
+                    <button className='scrollToBottom' onClick={scrollToBottom}>↓</button>
+                )}
                 <div className='InputSection'>
                     <input
                         type='text'

@@ -1,32 +1,31 @@
-/* Chat.css */
-
 /* Main container */
 .ChatContainer {
     display: flex;
-    flex-direction: row; /* Default to row, but will change on smaller screens */
-    height: 100vh; /* Fill the viewport vertically */
+    flex-direction: row;
+    height: 100vh;
     width: 100vw;
-    background-color: white; /* Add a light background color */
+    background-color: white;
 }
 
 /* Users list */
 .UsersList {
     text-align: center;
-    flex: 0.6; /* Decreased size to 80% of the original */
-    background-color: #ffffff; /* White background */
-    overflow-y: auto; /* Enable vertical scrolling if content overflows */
+    flex: 0.6;
+    background-color: #ffffff;
+    overflow-y: auto;
     display: flex;
-    flex-direction: column; /* Stack child elements vertically */
-    justify-content: space-between; /* Push items to top and bottom */
-    border-right: 1px solid #e0e0e0; /* Add a border to separate from the activity section */
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid #e0e0e0;
     padding: 1rem;
-    transition: all 0.3s ease; /* Add transition for smooth animation */
+    transition: all 0.3s ease;
 }
 
 .UsersList:hover {
-    box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Add shadow on hover */
-    transform: scale(1.00); /* Slightly increase size on hover */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transform: scale(1.00);
 }
+
 .USER {
     padding: 0.5rem;
     margin: 0.5rem 0;
@@ -39,117 +38,168 @@
     background-color: #e0e0e0;
 }
 
-
-
 .Leave {
-    margin-top: auto; 
-    color: white; /* Change text color to white */
-    background-color: #e57373; /* Red color for leave button */
-    border: none; /* Remove border */
-    border-radius: 0.5rem; /* Add border radius */
-    padding: 0.5rem 1rem; /* Adjust padding */
+    margin-top: auto;
+    color: white;
+    background-color: #e57373;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
     cursor: pointer;
 }
 
 .Leave:hover {
-    background-color: #ef5350; /* Darker red color on hover */
+    background-color: #ef5350;
 }
 
 /* Activity section */
 .ActivitySection {
-    flex: 3; /* Default size, will adjust on smaller screens */
-    display: flex;
-    flex-direction: column; /* Stack child elements vertically */
-    height: 100%; /* Fill the available space vertically */
-}
-/* Message display */
-.MessageDisplay {
-    flex-grow: 1; /* Grow to take up available space */
-    background-color: #ffffff; /* White background */
-    padding: 1rem;
-    overflow-y: auto; /* Enable vertical scrolling if content overflows */
-    border: 1px solid #e0e0e0; /* Add border for better distinction */
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.05); /* Add shadow for depth */
+    flex: 3;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem; /* Add gap between messages */
+    height: 100%;
+    position: relative; /* To position scrollToBottom button */
+}
+
+/* Message display */
+.MessageDisplay {
+    flex-grow: 1;
+    background-color: #ffffff;
+    padding: 1rem;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.scrollToBottom {
+    position: absolute;
+    bottom: 6rem; /* Adjust according to yoinput section height height */
+    right: calc(50% - 1.25rem);
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem; /* Use rem for size */
+    height: 2.5rem;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    font-size: 1.25rem; /* Use rem for font size */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+
+.scrollToBottom:hover {
+    background-color: #45a049;
 }
 
 /* Individual message */
 .Message {
-    margin-bottom: 0.5rem; /* Add margin between messages */
+    margin-bottom: 0.5rem;
     padding: 0.5rem;
     border-radius: 0.5rem;
-    transition: all 0.3s ease; /* Add transition for smooth animation */
+    transition: all 0.3s ease;
     width: fit-content;
-    max-width: 80%; /* Limit the width of the message to 80% of the container */
+    max-width: 80%;
 }
 
-/* Sent message style */
+.menuIconWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menuIcon {
+    cursor: pointer;
+    color: #666; /* Adjust the color */
+}
+
+.menuIcon:hover {
+    color: #333; /* Adjust hover color */
+}
+
+
 .sentMessage {
-    background-color: #64b5f6; /* Light blue background for sent messages */
-    color: #ffffff; /* White text color for sent messages */
-    align-self: flex-end; /* Align sent messages to the right */
-    border-top-right-radius: 0; /* Remove top right border radius */
-    border-radius: 15px; /* Add border radius */
-    padding: 1rem; /* Increase padding */
+    background-color: #64b5f6;
+    color: #ffffff;
+    align-self: flex-end;
+    border-top-right-radius: 0;
+    border-radius: 15px;
+    padding: 1rem;
 }
 
-/* Received message style */
 .receivedMessage {
-    background-color: #eeeeee; /* Light gray background for received messages */
-    color: #000000; /* Black text color for received messages */
-    align-self: flex-start; /* Align received messages to the left */
-    border-top-left-radius: 0; /* Remove top left border radius */
-    border-radius: 15px; /* Add border radius */
-    padding: 1rem; /* Increase padding */
+    background-color: #eeeeee;
+    color: #000000;
+    align-self: flex-start;
+    border-top-left-radius: 0;
+    border-radius: 15px;
+    padding: 1rem;
 }
 
 .sent_by {
-    font-weight: bold; /* Make the username bold */
-    color: #333; /* Dark gray color */
-    margin-bottom: 0.5rem; /* Add some space below the username */
-    transition: all 0.3s ease; /* Add transition for smooth animation */
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
 }
 
 .sent_by:hover {
-    color: black; /* Change color to tomato on hover */
+    color: black;
 }
 
+.context-menu {
+    position: absolute;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+}
+
+.context-menu div {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.context-menu div:hover {
+    background-color: #f0f0f0;
+}
 
 
 
 /* Input section */
 .InputSection {
     display: flex;
-    align-items: center; /* Align items vertically */
+    align-items: center;
     padding: 1rem;
-    background-color: #f5f5f5; /* Light gray background */
-    border-top: 1px solid #e0e0e0; /* Add border on top */
-    box-shadow: 0px -4px 10px rgba(0,0,0,0.1); /* Add shadow for depth */
+    background-color: #f5f5f5;
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0px -4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Input field */
 .InputSection input {
-    flex-grow: 1; /* Grow to take up remaining space */
+    flex-grow: 1;
     padding: 0.5rem;
     margin-right: 1rem;
-    border: none; /* Remove border */
-    border-radius: 0.5rem; /* Add border radius */
-    outline: none; /* Remove outline */
-    font-size: 1rem; /* Increase font size */
-    color: #333; /* Dark gray color */
-    background-color: #fff; /* White background */
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.1); /* Add shadow for depth */
+    border: none;
+    border-radius: 0.5rem;
+    outline: none;
+    font-size: 1rem;
+    color: #333;
+    background-color: #fff;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Placeholder style */
 .InputSection input::placeholder {
-    color: #999; /* Light gray color */
-    font-style: italic; /* Italic font style */
+    color: #999;
+    font-style: italic;
 }
 
-/* Send button */
 .InputSection button {
     padding: 0.8rem 1.2rem;
     background-color: #4caf50;
@@ -157,9 +207,9 @@
     border: none;
     border-radius: 0.5rem;
     cursor: pointer;
-    outline: none; /* Remove outline */
-    font-size: 1rem; /* Increase font size */
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.1); /* Add shadow for depth */
+    outline: none;
+    font-size: 1rem;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
 .InputSection button:hover {
@@ -168,39 +218,33 @@
 
 @media (max-width: 768px) {
     .ChatContainer {
-        padding: 10px;
-    }
-
-    .ActivitySection {
-        flex: 2; /* Adjust flex value */
+        flex-direction: column;
     }
 
     .UsersList {
-        position: absolute; /* Position users list */
-        top: 0;
-        right: 0;
-        z-index: 1; /* Ensure users list is above other content */
-        transition: right 0.3s; /* Add transition for smooth animation */
+        flex: 1;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+        height: 50vh;
     }
 
-    .UsersList:hover {
-        right: 50%; /* Move users list to the left on hover */
-        transform: translateX(50%); /* Center users list horizontally */
+    .ActivitySection {
+        flex: 2;
     }
 
     .Leave {
-        position: absolute; /* Position leave button */
-        top: 0;
-        left: 0;
+        position: relative;
+        width: 100%;
+        text-align: center;
     }
 
     .InputSection {
-        flex-direction: column; /* Stack input and button vertically */
+        flex-direction: column;
         align-items: stretch;
     }
 
     .InputSection input {
-        margin-bottom: 10px;
+        margin-bottom: 0.5rem;
         margin-right: 0;
     }
 }
