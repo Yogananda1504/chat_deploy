@@ -1,7 +1,6 @@
-// controllers/socketController.js
-
 const Message = require("../models/Message");
 const ActiveUser = require("../models/ActiveUser");
+
 
 // Socket controller for handling socket events
 exports.handleSocketEvents = (io) => {
@@ -43,11 +42,13 @@ exports.handleSocketEvents = (io) => {
 				socket.emit("welcome_message", {
 					username: "Admin",
 					message: `Welcome ${username} to the room ${room}`,
+					id: "-1",
 				});
 				// Broadcast to all users in the room about the new user
 				socket.to(room).emit("system_message", {
 					username: "Admin",
 					message: `${username} has joined the room`,
+					id: "-1",
 				});
 
 				// Send updated user list to all users in the room
@@ -58,31 +59,7 @@ exports.handleSocketEvents = (io) => {
 			}
 		});
 
-		socket.on("leave_room", async ({ username, room }) => {
-			console.log(`${username} is trying to leave the room ${room}`);
-			try {
-				// Find the user in the ActiveUsers collection
-				const user = await ActiveUser.findOne({ username, room });
-				if (user) {
-					// Remove the user from the ActiveUsers collection
-					await ActiveUser.deleteOne({ username, room });
-					// Unsubscribe the user from the room
-					socket.leave(room);
-					// Broadcast to all users in the room about the user leaving
-					socket.to(room).emit("left_room", {
-						username: "Admin",
-						message: `${username} has left the room`,
-					});
-					// Fetch updated user list from ActiveUsers collection
-					const activeUsersInRoom = await ActiveUser.find({ room });
-					// Send updated user list to all users in the room
-					io.to(room).emit("chatroom_users", activeUsersInRoom);
-				}
-			} catch (error) {
-				console.error("Error leaving room:", error);
-			}
-		});
-
+		// Handler for sending a message
 		socket.on("send_message", async ({ username, message, room }, callback) => {
 			try {
 				console.log(`${username} is sending a message in the room ${room}`);
@@ -91,11 +68,83 @@ exports.handleSocketEvents = (io) => {
 				await newMessage.save();
 
 				// Broadcast the message to all users in the room
-				io.to(room).emit("receive_message", { username, message });
+				io.to(room).emit("receive_message", {
+					username,
+					message,
+					_id: newMessage._id.toString(), // Ensure ID is correctly sent
+				});
+
+				// Optionally invoke the callback with the new message data
+				if (callback)
+					callback(null, { id: newMessage._id.toString(), message });
 			} catch (error) {
 				console.error("Error sending message:", error);
 				// Invoke the callback with the error to handle it on the client side
-				callback(error.message);
+				if (callback) callback(error.message);
+			}
+		});
+
+		socket.on("delete_for_me", async ({ username, messageIds }) => {
+			try {
+				console.log(
+					`Received request to delete messages for user: ${username}`
+				);
+				console.log(`Message IDs: ${messageIds}`);
+
+				// Update all messages in batch
+				const result = await Message.updateMany(
+					{ _id: { $in: messageIds } }, // Only update messages not already deleted for the user
+					{ $addToSet: { deletedForMe: username } }
+				);
+
+				console.log(
+					`Messages marked for deletion for user ${username}. Update result:`,
+					result
+				);
+				// Send success response to the client if needed
+			} catch (error) {
+				console.error("Error marking messages for deletion:", error);
+				// Send error response to the client if needed
+			}
+		});
+
+		socket.on("delete_for_everyone", async ({ username, messageIds }) => {
+			try {
+				console.log(
+					`Received request to delete messages for everyone from user: ${username}`
+				);
+				console.log(`Message IDs: ${messageIds}`);
+
+				// Update all messages in batch
+				const result = await Message.updateMany(
+					{ _id: { $in: messageIds } },
+					{
+						deletedForEveryone: true,
+						deletedBy: username,
+					}
+				);
+
+				console.log(
+					`Messages marked for deletion for everyone by user ${username}. Update result:`,
+					result
+				);
+
+				// Broadcast the deletion to all users in the room
+				const deletedMessages = messageIds.map((id) => ({
+					_id: id,
+					deletedForEveryone: true,
+					deletedBy: username,
+				}));
+				const room = await Message.findOne({ _id: { $in: messageIds } }).select(
+					"room"
+				);
+				io.to(room).emit("messages_deleted", {
+					messageIds,
+					username,
+				});
+			} catch (error) {
+				console.error("Error marking messages for deletion:", error);
+				// Send error response to the client if needed
 			}
 		});
 
@@ -124,6 +173,30 @@ exports.handleSocketEvents = (io) => {
 				}
 			} catch (error) {
 				console.error("Error disconnecting:", error);
+			}
+		});
+
+		socket.on("leave_room", async ({ username, room }) => {
+			try {
+				// Remove the user from the ActiveUsers collection
+				await ActiveUser.deleteOne({ username, room });
+
+				// Broadcast to all users in the room about the user leaving
+				io.to(room).emit("left_room", {
+					username: "Admin",
+					message: `${username} has left the room`,
+				});
+
+				// Fetch updated user list from ActiveUsers collection
+				const activeUsersInRoom = await ActiveUser.find({ room });
+
+				// Send updated user list to all users in the room
+				io.to(room).emit("chatroom_users", activeUsersInRoom);
+
+				// Disconnect the socket
+				socket.disconnect();
+			} catch (error) {
+				console.error("Error leaving room:", error);
 			}
 		});
 	});

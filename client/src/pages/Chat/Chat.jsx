@@ -4,18 +4,24 @@ import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './Chat.css';
-import ContextMenu from './ContextMenu'; // Import the ContextMenu component
+import ContextMenu from './ContextMenu';
+
+const INACTIVITY_TIME_LIMIT = 15 * 60 * 1000; // 15 minutes
 
 function Chat({ username, socket, joinRoom }) {
     const [message, setMessage] = useState('');
     const [receivedMessages, setReceivedMessages] = useState([]);
     const [users, setUsers] = useState([]);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedMessages, setSelectedMessages] = useState([]);
     const { room } = useParams();
     const navigate = useNavigate();
     const messageDisplayRef = useRef(null);
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
     const [contextMenuVisible, setContextMenuVisible] = useState(false);
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const inactivityTimerRef = useRef(null);
 
     useEffect(() => {
         if (!socket || !room) return;
@@ -35,6 +41,7 @@ function Chat({ username, socket, joinRoom }) {
         socket.on('welcome_message', handleWelcomeMessage);
         socket.on('system_message', handleSystemMessage);
         socket.on('left_room', handleLeftRoom);
+        socket.on('messages_deleted', handleMessagesDeleted);
 
         return () => {
             socket.off('receive_message', handleMessage);
@@ -42,6 +49,7 @@ function Chat({ username, socket, joinRoom }) {
             socket.off('welcome_message', handleWelcomeMessage);
             socket.off('system_message', handleSystemMessage);
             socket.off('left_room', handleLeftRoom);
+            socket.off('messages_deleted', handleMessagesDeleted);
         };
     }, [socket, username, room]);
 
@@ -50,7 +58,7 @@ function Chat({ username, socket, joinRoom }) {
 
         const fetchData = async () => {
             try {
-                const res = await axios.get(`http://localhost:4000/api/chat/messages?room=${room}`, {
+                const res = await axios.get(`http://localhost:4000/api/chat/messages?room=${room}&username=${username}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }
@@ -59,31 +67,94 @@ function Chat({ username, socket, joinRoom }) {
                 setReceivedMessages(res.data.Messages);
                 setUsers(res.data.users);
             } catch (error) {
-                if (error.response) {
-                    const status = error.response.status;
-                    if (status === 401) {
-                        navigate('/Forbidden');
-                    } else if (status === 404) {
-                        navigate('/Not-found');
-                    } else if (status === 500) {
-                        navigate('/Internal-error');
-                    } else {
-                        console.error('Error fetching data:', error);
-                        toast.error('Failed to fetch chat data');
-                    }
-                } else {
-                    console.error('Error fetching data:', error);
-                    toast.error('Failed to fetch chat data');
-                }
+                handleFetchError(error);
             }
         };
 
         fetchData();
+    }, [room, socket, navigate]);
+
+    useEffect(() => {
+        const messageDisplay = messageDisplayRef.current;
+
+        const handleScroll = () => {
+            const atBottom = messageDisplay.scrollHeight - messageDisplay.scrollTop <= messageDisplay.clientHeight + 1;
+            setShowScrollToBottom(!atBottom);
+            setIsAtBottom(atBottom);
+        };
+
+        messageDisplay.addEventListener('scroll', handleScroll);
 
         return () => {
-            // No cleanup needed for fetchData
+            messageDisplay.removeEventListener('scroll', handleScroll);
         };
-    }, [room, socket, navigate]);
+    }, []);
+
+    useEffect(() => {
+        if (isAtBottom) {
+            scrollToBottom();
+        } else {
+            setShowScrollToBottom(true);
+        }
+    }, [receivedMessages]);
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            renewToken();
+        }, 10 * 60 * 1000); // 10 minutes
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    useEffect(() => {
+        const handleActivity = () => {
+            resetInactivityTimer();
+        };
+
+        window.addEventListener('mousemove', handleActivity);
+        window.addEventListener('keydown', handleActivity);
+        window.addEventListener('scroll', handleActivity);
+
+        resetInactivityTimer();
+
+        return () => {
+            window.removeEventListener('mousemove', handleActivity);
+            window.removeEventListener('keydown', handleActivity);
+            window.removeEventListener('scroll', handleActivity);
+            clearTimeout(inactivityTimerRef.current);
+        };
+    }, []);
+
+    const renewToken = async () => {
+        try {
+            const response = await axios.post('http://localhost:4000/api/chat/renew-token', {username,room}, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            localStorage.setItem('token', response.data.token);
+            toast.success('Token renewed successfully');
+        } catch (error) {
+            console.error('Failed to renew token:', error);
+            toast.error('Failed to renew token.');
+            navigate('/');
+        }
+    };
+
+    const resetInactivityTimer = () => {
+        clearTimeout(inactivityTimerRef.current);
+        inactivityTimerRef.current = setTimeout(() => {
+            handleLogout();
+        }, INACTIVITY_TIME_LIMIT);
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        socket.emit('leave_room', { username, room });
+        navigate('/login');
+        toast.warn('You have been logged out due to inactivity.');
+    };
 
     const handleMessage = (data) => {
         setReceivedMessages(prevMessages => [...prevMessages, data]);
@@ -107,13 +178,22 @@ function Chat({ username, socket, joinRoom }) {
         setReceivedMessages(prevMessages => [...prevMessages, data]);
     };
 
+    const handleMessagesDeleted = ({ messageIds, username }) => {
+        setReceivedMessages(prevMessages =>
+            prevMessages.map(msg =>
+                messageIds.includes(msg._id) ? { ...msg, deletedForEveryone: true, deletedBy: username } : msg
+            )
+        );
+    };
+
     const handleMessageSend = () => {
         if (message.trim() === '') return;
 
         socket.emit('send_message', {
             username: username,
             message: message,
-            room: room
+            room: room,
+            token: localStorage.getItem('token')
         });
 
         setMessage('');
@@ -135,24 +215,13 @@ function Chat({ username, socket, joinRoom }) {
             top: messageDisplayRef.current.scrollHeight,
             behavior: 'smooth',
         });
-        setShowScrollToBottom(false); // Ensure the button disappears after scrolling
-    };
-
-    const handleScroll = () => {
-        if (messageDisplayRef.current) {
-            const { scrollTop, scrollHeight, clientHeight } = messageDisplayRef.current;
-            if (scrollHeight - scrollTop === clientHeight) {
-                setShowScrollToBottom(false);
-            } else {
-                setShowScrollToBottom(true);
-            }
-        }
+        setShowScrollToBottom(false);
     };
 
     const handleContextMenu = (e) => {
         e.preventDefault();
-        const rect = e.target.getBoundingClientRect();
         setContextMenuVisible(true);
+        const rect = e.target.getBoundingClientRect();
         setContextMenuPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     };
 
@@ -160,24 +229,70 @@ function Chat({ username, socket, joinRoom }) {
         setContextMenuVisible(false);
     };
 
-    useEffect(() => {
-        // Function to close context menu
-        const closeOnOutsideClick = (e) => {
-            if (contextMenuVisible) {
-                closeContextMenu();
+    const toggleSelectionMode = () => {
+        setSelectionMode(!selectionMode);
+        setSelectedMessages([]);
+    };
+
+    const handleSelectMessage = (index) => {
+        setSelectedMessages(prevSelected => {
+            if (prevSelected.includes(index)) {
+                return prevSelected.filter(i => i !== index);
+            } else {
+                return [...prevSelected, index];
             }
-        };
+        });
+    };
 
-        // Add event listener when context menu is visible
-        if (contextMenuVisible) {
-            document.addEventListener('click', closeOnOutsideClick);
+    const handleDeleteMessagesForMe = () => {
+        if (selectedMessages.length === 0) return;
+
+        const messagesToDelete = selectedMessages
+            .map(i => receivedMessages[i]._id);
+
+        const updatedMessages = receivedMessages.filter((msg, index) => !selectedMessages.includes(index));
+
+        socket.emit('delete_for_me', { username, messageIds: messagesToDelete });
+
+        setReceivedMessages(updatedMessages);
+        setSelectedMessages([]);
+        setSelectionMode(false);
+    };
+
+    const handleDeleteMessagesForEveryone = () => {
+        if (selectedMessages.length === 0) return;
+
+        const messagesToDelete = selectedMessages
+            .map(i => receivedMessages[i]._id)
+            .filter(i => receivedMessages.find(msg => msg._id === i).username === username);
+
+        const updatedMessages = receivedMessages.filter((msg, index) => !selectedMessages.includes(index));
+
+        socket.emit('delete_for_everyone', { username, messageIds: messagesToDelete });
+
+        setReceivedMessages(updatedMessages);
+        setSelectedMessages([]);
+        setSelectionMode(false);
+    };
+
+    const handleFetchError = (error) => {
+        if (error.response) {
+            const status = error.response.status;
+            if (status === 401) {
+                navigate('/Forbidden');
+            } else if (status === 404) {
+                navigate('/Not-found');
+            } else if (status === 500) {
+                navigate('/Internal-error');
+            } else {
+                console.error('Error fetching data:', error);
+                toast.error('Failed to fetch chat data');
+            }
+        } else {
+            console.error('Error fetching data:', error);
+            toast.error('Failed to fetch chat data');
         }
-
-        // Cleanup: remove event listener when context menu is not visible
-        return () => {
-            document.removeEventListener('click', closeOnOutsideClick);
-        };
-    }, [contextMenuVisible]);
+    };
 
     return (
         <div className='ChatContainer'>
@@ -193,11 +308,23 @@ function Chat({ username, socket, joinRoom }) {
             </div>
 
             <div className='ActivitySection' onContextMenu={handleContextMenu}>
-                <div className='MessageDisplay' ref={messageDisplayRef} onScroll={handleScroll}>
+                <div className='MessageDisplay' ref={messageDisplayRef}>
                     {receivedMessages.map((msg, index) => (
                         <div key={index} className={msg.username === username ? 'sentMessage' : 'receivedMessage'}>
-                            <div className='sent_by'>{msg.username} </div>
-                            <span>{msg.message}</span>
+                            {selectionMode && (
+                                <input
+                                    type="checkbox"
+                                    className="messageCheckbox"
+                                    checked={selectedMessages.includes(index)}
+                                    onChange={() => handleSelectMessage(index)}
+                                />
+                            )}
+                            <div className='sent_by'>{msg.username}</div>
+                            {msg.deletedForEveryone ? (
+                                <span>{msg.username === username ? 'You deleted this message' : `${msg.deletedBy} deleted this message`}</span>
+                            ) : (
+                                <span>{msg.message}</span>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -206,6 +333,9 @@ function Chat({ username, socket, joinRoom }) {
                         x={contextMenuPosition.x}
                         y={contextMenuPosition.y}
                         onClose={closeContextMenu}
+                        onSelect={toggleSelectionMode}
+                        onDeleteForMe={handleDeleteMessagesForMe}
+                        onDeleteForEveryone={handleDeleteMessagesForEveryone}
                     />
                 )}
                 {showScrollToBottom && (
@@ -221,6 +351,15 @@ function Chat({ username, socket, joinRoom }) {
                     />
                     <button onClick={handleMessageSend}>Send</button>
                 </div>
+                {selectionMode && (
+                    <div className='OptionsBar'>
+                        <button onClick={() => setSelectedMessages(receivedMessages.map((_, i) => i))}>Select All</button>
+                        <button onClick={() => setSelectedMessages([])}>Deselect All</button>
+                        <button onClick={handleDeleteMessagesForMe}>Delete For Me</button>
+                        <button onClick={handleDeleteMessagesForEveryone}>Delete For Everyone</button>
+                        <button onClick={toggleSelectionMode}>Exit Selection</button>
+                    </div>
+                )}
             </div>
         </div>
     );

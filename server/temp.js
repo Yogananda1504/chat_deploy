@@ -3,11 +3,11 @@ const http = require("http");
 const cors = require("cors");
 const socketIO = require("socket.io");
 const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
+const redisAdapter = require("socket.io-redis");
 
 // Require routers
 const chatRouter = require("./routes/chatRouter");
-// const join_router = require("./routers/join_router");
+
 // Require socket controller
 const { handleSocketEvents } = require("./controllers/socketController");
 
@@ -40,10 +40,14 @@ db.once("open", () => {
 // Mount routers
 app.use("/api", chatRouter);
 
+// Configure Redis adapter for Socket.IO
+io.adapter(redisAdapter({ host: "localhost", port: 6379 }));
+
 // Initialize socket controller
 handleSocketEvents(io);
 
-const PORT = 4000;
-server.listen(PORT, () => {
-	console.log(`Server is running on port ${PORT}`);
+// Start the server on a worker process
+server.listen(process.env.PORT || 4000, () => {
+	const PORT = server.address().port;
+	console.log(`Worker ${process.pid} started on port ${PORT}`);
 });
