@@ -12,6 +12,7 @@ import E_500 from './error/E_500';
 const socket = io.connect('http://localhost:4000');
 
 function App() {
+    const [inactive,setInactive] = useState(false);
     const [username, setUsername] = useState(localStorage.getItem('username') || '');
     const [room, setRoom] = useState(localStorage.getItem('room') || '');
     const [joinRoom, setJoinRoom] = useState(false);

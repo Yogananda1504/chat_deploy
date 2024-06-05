@@ -145,6 +145,7 @@ function Chat({ username, socket, joinRoom }) {
     const resetInactivityTimer = () => {
         clearTimeout(inactivityTimerRef.current);
         inactivityTimerRef.current = setTimeout(() => {
+           
             handleLogout();
         }, INACTIVITY_TIME_LIMIT);
     };

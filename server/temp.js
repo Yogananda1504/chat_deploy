@@ -4,6 +4,7 @@ const cors = require("cors");
 const socketIO = require("socket.io");
 const mongoose = require("mongoose");
 const redisAdapter = require("socket.io-redis");
+const path = require("path");
 
 // Require routers
 const chatRouter = require("./routes/chatRouter");
@@ -15,7 +16,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
 	cors: {
-		origin: "http://localhost:5173", // Replace with your React app's origin.
+		origin: "http://localhost:5173", // Replace with your React app's origin if needed.
 		methods: ["GET", "POST"],
 	},
 });
@@ -39,6 +40,22 @@ db.once("open", () => {
 
 // Mount routers
 app.use("/api", chatRouter);
+
+// Serve static files from the React app's build directory
+const buildPath = path.join(
+	"C:",
+	"workspace",
+	"WebD",
+	"chat_deploy",
+	"client",
+	"dist"
+);
+app.use(express.static(buildPath));
+
+// Redirect any non-API routes to the front end's index.html
+app.get("*", (req, res) => {
+	res.sendFile(path.join(buildPath, "index.html"));
+});
 
 // Configure Redis adapter for Socket.IO
 io.adapter(redisAdapter({ host: "localhost", port: 6379 }));
