@@ -7,7 +7,7 @@ import './Chat.css';
 import ContextMenu from './ContextMenu';
 
 const INACTIVITY_TIME_LIMIT = 15 * 60 * 1000; // 15 minutes
-
+const apiURL = process.env.AZURE_DOMAIN || 'http://localhost:4000'; // Use the environment variable or default to localhost
 function Chat({ username, socket, joinRoom }) {
     const [message, setMessage] = useState('');
     const [receivedMessages, setReceivedMessages] = useState([]);
@@ -58,7 +58,7 @@ function Chat({ username, socket, joinRoom }) {
 
         const fetchData = async () => {
             try {
-                const res = await axios.get(`http://localhost:4000/api/chat/messages?room=${room}&username=${username}`, {
+                const res = await axios.get(`${apirURL}/api/chat/messages?room=${room}&username=${username}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }
@@ -127,7 +127,7 @@ function Chat({ username, socket, joinRoom }) {
 
     const renewToken = async () => {
         try {
-            const response = await axios.post('http://localhost:4000/api/chat/renew-token', {username,room}, {
+            const response = await axios.post(`${apiURL}/api/chat/renew-token`, {username,room}, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }

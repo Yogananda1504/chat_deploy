@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -16,7 +17,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
 	cors: {
-		origin: "http://localhost:5173", // Replace with your React app's origin if needed.
+		origin: process.env.AZURE_DOMAIN || "http://localhost:5173", // Use environment variable or fallback to localhost for development
 		methods: ["GET", "POST"],
 	},
 });
@@ -25,8 +26,9 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connection
-const localhost = "127.0.0.1";
-mongoose.connect(`mongodb://${localhost}:27017/chat`, {
+const MONGO_DB_URI =
+	process.env.MONGO_DB_URI || "mongodb://127.0.0.1:27017/chat";
+mongoose.connect(MONGO_DB_URI, {
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 });
@@ -42,14 +44,7 @@ db.once("open", () => {
 app.use("/api", chatRouter);
 
 // Serve static files from the React app's build directory
-const buildPath = path.join(
-	"C:",
-	"workspace",
-	"WebD",
-	"chat_deploy",
-	"client",
-	"dist"
-);
+const buildPath = path.join(__dirname, "..", "client", "dist"); // Use __dirname to ensure relative path
 app.use(express.static(buildPath));
 
 // Redirect any non-API routes to the front end's index.html
@@ -58,13 +53,15 @@ app.get("*", (req, res) => {
 });
 
 // Configure Redis adapter for Socket.IO
-io.adapter(redisAdapter({ host: "localhost", port: 6379 }));
+const redisHost = process.env.REDIS_HOST || "localhost";
+const redisPort = process.env.REDIS_PORT || 6379;
+io.adapter(redisAdapter({ host: redisHost, port: redisPort }));
 
 // Initialize socket controller
 handleSocketEvents(io);
 
 // Start the server on a worker process
-server.listen(process.env.PORT || 4000, () => {
-	const PORT = server.address().port;
-	console.log(`Worker ${process.pid} started on port ${PORT}`);
+const port = process.env.PORT || 4000;
+server.listen(port, () => {
+	console.log(`Server running on port ${port}`);
 });

@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import './Home.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { toast, ToastContainer } from 'react-toastify'; 
-import 'react-toastify/dist/ReactToastify.css'; 
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Home = ({ username, setUsername, room, setRoom, socket }) => {
     const navigate = useNavigate();
+    const apiUrl = process.env.AZURE_DOMAIN || 'http://localhost:4000'; // Use the environment variable or default to localhost
 
     const joinRoom = async (e) => {
         e.preventDefault();
@@ -31,7 +32,7 @@ const Home = ({ username, setUsername, room, setRoom, socket }) => {
 
         const generateTokenAndJoinRoom = async () => {
             try {
-                const res = await axios.post(`http://localhost:4000/api/generate-token?room=${room}&username=${username}`);
+                const res = await axios.post(`${apiUrl}/api/generate-token?room=${room}&username=${username}`);
                 const token = res.data.token;
                 localStorage.setItem('token', token);
                 socket.emit('join_room', { username, room });
@@ -47,7 +48,7 @@ const Home = ({ username, setUsername, room, setRoom, socket }) => {
         return () => {
             socket.off('username_taken', handleUsernameTaken);
         };
-    }, [navigate, room, socket, username]);
+    }, [apiUrl, navigate, room, socket, username]);
 
     return (
         <div className='Container'>

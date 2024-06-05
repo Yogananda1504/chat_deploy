@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import io from 'socket.io-client';
@@ -8,11 +7,14 @@ import E_401 from './error/E_401';
 import E_404 from './error/E_404';
 import E_500 from './error/E_500';
 
-//creation of the socket connection 
-const socket = io.connect('http://localhost:4000');
+// Get the domain from environment variables
+const domain = process.env.AZURE_DOMAIN;
+
+// Creation of the socket connection
+const socket = io.connect(domain);
 
 function App() {
-    const [inactive,setInactive] = useState(false);
+    const [inactive, setInactive] = useState(false);
     const [username, setUsername] = useState(localStorage.getItem('username') || '');
     const [room, setRoom] = useState(localStorage.getItem('room') || '');
     const [joinRoom, setJoinRoom] = useState(false);
@@ -27,7 +29,6 @@ function App() {
 
     return (
         <Router>
-
             <Routes>
                 <Route
                     exact path='/'
@@ -46,11 +47,10 @@ function App() {
                     element={<E_500 />}
                 />
                 <Route
-                    exact path='*' element={<E_404 />}
+                    exact path='*'
+                    element={<E_404 />}
                 />
             </Routes>
-
-
         </Router>
     );
 }
