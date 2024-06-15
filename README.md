@@ -47,14 +47,14 @@ DevRooms is a real-time messaging platform enabling dynamic communication within
 
 ## Client-side:
     ```bash
-       cd client
-       npm i
+     cd client
+     npm i
     ```
     
 ## Server-side:
     ```bash
-       cd server
-       npm i
+     cd server
+     npm i
     ```
 
 
