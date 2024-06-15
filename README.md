@@ -41,8 +41,9 @@ DevRooms is a real-time messaging platform enabling dynamic communication within
 **Steps**
 
 ## **Clone the repository:**
+   ```bash
+   git clone https://github.com/Yogananda1504/chat_deploy.git
    ```
-   git clone https://github.com/Yogananda1504/chat_deploy.git```
 
 ## Client-side:
     ```bash
