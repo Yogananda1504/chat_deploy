@@ -20,9 +20,7 @@ h2 {
 }
 
 /* Input, options, and button styling */
-.Devrooms_input,
-.DevRooms_options,
-.DevRooms_button {
+.Devrooms_input, .DevRooms_options, .DevRooms_button {
     width: 100%;
     padding: 10px;
     box-sizing: border-box;
@@ -30,6 +28,11 @@ h2 {
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 16px;
+}
+
+/* Custom room input styling */
+.Devrooms_input[type="text"] {
+    margin-top: 10px;
 }
 
 /* Button styling */
@@ -44,23 +47,27 @@ h2 {
 }
 
 /* Button hover effect */
-.DevRooms_button:hover {
+.DevRooms_button:hover:not(:disabled) {
     background-color: #45a049;
     transform: scale(1.05);
 }
 
+/* Disabled button styling */
+.DevRooms_button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+}
+
 /* Additional input focus styling */
-.Devrooms_input:focus,
-.DevRooms_options:focus,
-.DevRooms_button:focus {
+.Devrooms_input:focus, .DevRooms_options:focus, .DevRooms_button:focus {
     outline: none;
     border-color: #4CAF50;
     box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
 }
 
 /* Placeholder styling for input fields */
-.Devrooms_input::placeholder,
-.DevRooms_options::placeholder {
+.Devrooms_input::placeholder, .DevRooms_options::placeholder {
     color: #888;
     opacity: 1; /* Firefox */
 }

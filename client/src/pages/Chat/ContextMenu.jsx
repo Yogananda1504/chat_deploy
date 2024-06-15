@@ -1,22 +1,51 @@
 import React from 'react';
 import './ContextMenu.css';
 
-const ContextMenu = ({ x, y, onClose, onSelect }) => {
+const ContextMenu = ({
+    x,
+    y,
+    onClose,
+    onSelect,
+    handleSelectAll,
+    handleDeselectAll,
+    handleDeleteMessagesForEveryone,
+    handleDeleteMessagesForMe,
+    
+}) => {
     const handleItemClick = (action) => {
-        console.log(action); // Add this line
-        if (action === 'Select') {
-            onSelect(); // Toggle selection mode
-        }
-        // Handle other actions here
         console.log(`Action selected: ${action}`);
-        onClose(); // Close the context menu after action selection
+        switch (action) {
+            case 'Select':
+                onSelect();
+                break;
+            case 'Select All':
+                handleSelectAll();
+                break;
+            case 'Deselect All':
+                handleDeselectAll();
+                break;
+            case 'Delete for me':
+                handleDeleteMessagesForMe();
+                break;
+            case 'Delete for everyone':
+                handleDeleteMessagesForEveryone();
+                break;
+           
+            default:
+                console.log(`Unhandled action: ${action}`);
+        }
+        onClose();
     };
+
     return (
         <div className="contextMenu" style={{ top: y, left: x }}>
             <ul>
                 <li onClick={() => handleItemClick('Select')}>Select</li>
-                <li onClick={() => handleItemClick('Delete')}>Delete</li>
-                <li onClick={() => handleItemClick('Analyze')}>Analyze</li>
+                <li onClick={() => handleItemClick('Select All')}>Select All</li>
+                <li onClick={() => handleItemClick('Deselect All')}>Deselect All</li>
+                <li onClick={() => handleItemClick('Delete for me')}>Delete for me</li>
+                <li onClick={() => handleItemClick('Delete for everyone')}>Delete for everyone</li>
+               
             </ul>
         </div>
     );

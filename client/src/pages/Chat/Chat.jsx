@@ -6,9 +6,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import './Chat.css';
 import ContextMenu from './ContextMenu';
 
-const INACTIVITY_TIME_LIMIT = 15 * 60 * 1000; // 15 minutes
-const apiURL = process.env.AZURE_DOMAIN || 'http://localhost:4000'; // Use the environment variable or default to localhost
-function Chat({ username, socket, joinRoom }) {
+const INACTIVITY_TIME_LIMIT =15*60* 1000; // 15 minutes
+const apiURL = 'http://localhost:4000'; // Use the environment variable or default to localhost
+
+function Chat({ username, socket, joinRoom, activitystatus, setActivitystatus, leftstatus, setLeftstatus }) {
     const [message, setMessage] = useState('');
     const [receivedMessages, setReceivedMessages] = useState([]);
     const [users, setUsers] = useState([]);
@@ -21,6 +22,10 @@ function Chat({ username, socket, joinRoom }) {
     const [contextMenuVisible, setContextMenuVisible] = useState(false);
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
     const [isAtBottom, setIsAtBottom] = useState(true);
+    const [search, setSearch] = useState('');
+    const [showPopup, setShowPopup] = useState(false);
+    const [messageType, setMessageType] = useState(null);
+
     const inactivityTimerRef = useRef(null);
 
     useEffect(() => {
@@ -58,9 +63,9 @@ function Chat({ username, socket, joinRoom }) {
 
         const fetchData = async () => {
             try {
-                const res = await axios.get(`${apirURL}/api/chat/messages?room=${room}&username=${username}`, {
+                const res = await axios.get(`${apiURL}/api/chat/messages?room=${room}&username=${username}`, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                        Authorization: `Bearer ${sessionStorage.getItem('token')}`
                     }
                 });
 
@@ -127,13 +132,13 @@ function Chat({ username, socket, joinRoom }) {
 
     const renewToken = async () => {
         try {
-            const response = await axios.post(`${apiURL}/api/chat/renew-token`, {username,room}, {
+            const response = await axios.post(`${apiURL}/api/chat/renew-token`, { username, room }, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                    Authorization: `Bearer ${sessionStorage.getItem('token')}`
                 }
             });
 
-            localStorage.setItem('token', response.data.token);
+            sessionStorage.setItem('token', response.data.token);
             toast.success('Token renewed successfully');
         } catch (error) {
             console.error('Failed to renew token:', error);
@@ -145,16 +150,16 @@ function Chat({ username, socket, joinRoom }) {
     const resetInactivityTimer = () => {
         clearTimeout(inactivityTimerRef.current);
         inactivityTimerRef.current = setTimeout(() => {
-           
             handleLogout();
         }, INACTIVITY_TIME_LIMIT);
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
         socket.emit('leave_room', { username, room });
-        navigate('/login');
-        toast.warn('You have been logged out due to inactivity.');
+        console.log('Logged out due to inactivity');
+        setActivitystatus(false);
+        sessionStorage.removeItem('token');
+        navigate('/');
     };
 
     const handleMessage = (data) => {
@@ -182,10 +187,13 @@ function Chat({ username, socket, joinRoom }) {
     const handleMessagesDeleted = ({ messageIds, username }) => {
         setReceivedMessages(prevMessages =>
             prevMessages.map(msg =>
-                messageIds.includes(msg._id) ? { ...msg, deletedForEveryone: true, deletedBy: username } : msg
+                messageIds.includes(msg._id)
+                    ? { ...msg, message: 'This message was deleted', deletedForEveryone: true, deletedBy: username }
+                    : msg
             )
         );
     };
+
 
     const handleMessageSend = () => {
         if (message.trim() === '') return;
@@ -194,10 +202,35 @@ function Chat({ username, socket, joinRoom }) {
             username: username,
             message: message,
             room: room,
-            token: localStorage.getItem('token')
+            token: sessionStorage.getItem('token')
         });
 
         setMessage('');
+    };
+
+    const handleDeletion = () => {
+        if (selectedMessages.length === 0) return;
+
+        let hasSentByMe = false;
+        let hasNotSentByMe = false;
+
+        selectedMessages.forEach(index => {
+            if (receivedMessages[index].username === username) {
+                hasSentByMe = true;
+            } else {
+                hasNotSentByMe = true;
+            }
+        });
+
+        if (hasSentByMe && hasNotSentByMe) {
+            setMessageType('both');
+        } else if (hasSentByMe) {
+            setMessageType('sentByMe');
+        } else {
+            setMessageType('notSentByMe');
+        }
+
+        setShowPopup(true);
     };
 
     const handleKeyPress = (e) => {
@@ -208,7 +241,12 @@ function Chat({ username, socket, joinRoom }) {
 
     const handleLeave = () => {
         socket.emit('leave_room', { username, room });
+        setLeftstatus(true);
         navigate('/');
+    };
+
+    const handleSearch = (event) => {
+        setSearch(event.target.value);
     };
 
     const scrollToBottom = () => {
@@ -248,8 +286,7 @@ function Chat({ username, socket, joinRoom }) {
     const handleDeleteMessagesForMe = () => {
         if (selectedMessages.length === 0) return;
 
-        const messagesToDelete = selectedMessages
-            .map(i => receivedMessages[i]._id);
+        const messagesToDelete = selectedMessages.map(i => receivedMessages[i]._id);
 
         const updatedMessages = receivedMessages.filter((msg, index) => !selectedMessages.includes(index));
 
@@ -258,6 +295,7 @@ function Chat({ username, socket, joinRoom }) {
         setReceivedMessages(updatedMessages);
         setSelectedMessages([]);
         setSelectionMode(false);
+        setShowPopup(false);
     };
 
     const handleDeleteMessagesForEveryone = () => {
@@ -265,16 +303,22 @@ function Chat({ username, socket, joinRoom }) {
 
         const messagesToDelete = selectedMessages
             .map(i => receivedMessages[i]._id)
-            .filter(i => receivedMessages.find(msg => msg._id === i).username === username);
+            .filter(id => receivedMessages.find(msg => msg._id === id).username === username);
 
-        const updatedMessages = receivedMessages.filter((msg, index) => !selectedMessages.includes(index));
+        const updatedMessages = receivedMessages.map((msg, index) =>
+            selectedMessages.includes(index) && msg.username === username
+                ? { ...msg, message: "You deleted this message", deletedForEveryone: true, deletedBy: username }
+                : msg
+        );
 
-        socket.emit('delete_for_everyone', { username, messageIds: messagesToDelete });
+        socket.emit('delete_for_everyone', { username, room, messageIds: messagesToDelete });
 
         setReceivedMessages(updatedMessages);
         setSelectedMessages([]);
         setSelectionMode(false);
+        setShowPopup(false);
     };
+
 
     const handleFetchError = (error) => {
         if (error.response) {
@@ -295,17 +339,52 @@ function Chat({ username, socket, joinRoom }) {
         }
     };
 
+    const handleSelectAll = () => {
+        setSelectedMessages(receivedMessages.map((_, i) => i));
+    };
+
+    const handleDeselectAll = () => {
+        setSelectedMessages([]);
+    };
+
     return (
         <div className='ChatContainer'>
             <ToastContainer />
-            <div className='UsersList'>
-                <h3>Users in {room}</h3>
-                <ul>
-                    {users.map((user, index) => (
-                        <li className='USER' style={{ listStyle: 'none' }} key={index}>{user.username}</li>
-                    ))}
-                </ul>
-                <button className='Leave' onClick={handleLeave}>Leave</button>
+            <div className='Info'>
+                <div className='header'>
+                    <h3>{room}</h3>
+                </div>
+                <div className='UsersList'>
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            value={search}
+                            onChange={handleSearch}
+                        />
+                    </div>
+
+                    <ul>
+                        {users ? (
+                            users.length > 0 ? (
+                                users
+                                    .filter(user => user.username.toLowerCase().includes(search.toLowerCase()))
+                                    .map((user, index) => (
+                                        <li className='USER' style={{ listStyle: 'none' }} key={index}>
+                                            {user.username}
+                                        </li>
+                                    ))
+                            ) : (
+                                <li>No users in the room</li>
+                            )
+                        ) : (
+                            <div>Loading users...</div>
+                        )}
+                    </ul>
+                </div>
+                <div className='Leave-container'>
+                    <button onClick={handleLeave} className='Leave'>Leave Room</button>
+                </div>
             </div>
 
             <div className='ActivitySection' onContextMenu={handleContextMenu}>
@@ -337,12 +416,18 @@ function Chat({ username, socket, joinRoom }) {
                         onSelect={toggleSelectionMode}
                         onDeleteForMe={handleDeleteMessagesForMe}
                         onDeleteForEveryone={handleDeleteMessagesForEveryone}
+                        handleSelectAll={handleSelectAll}
+                        handleDeselectAll={handleDeselectAll}
+                        handleDeleteMessagesForEveryone={handleDeleteMessagesForEveryone}
+                        handleDeleteMessagesForMe={handleDeleteMessagesForMe}
+                        toggleSelectionMode={toggleSelectionMode}
                     />
                 )}
                 {showScrollToBottom && (
                     <button className='scrollToBottom' onClick={scrollToBottom}>↓</button>
                 )}
-                <div className='InputSection'>
+
+                {!selectionMode ? <div className='InputSection'>
                     <input
                         type='text'
                         placeholder='Type your message...'
@@ -351,14 +436,23 @@ function Chat({ username, socket, joinRoom }) {
                         onKeyDown={handleKeyPress}
                     />
                     <button onClick={handleMessageSend}>Send</button>
-                </div>
-                {selectionMode && (
+                </div> : (
                     <div className='OptionsBar'>
-                        <button onClick={() => setSelectedMessages(receivedMessages.map((_, i) => i))}>Select All</button>
-                        <button onClick={() => setSelectedMessages([])}>Deselect All</button>
-                        <button onClick={handleDeleteMessagesForMe}>Delete For Me</button>
-                        <button onClick={handleDeleteMessagesForEveryone}>Delete For Everyone</button>
-                        <button onClick={toggleSelectionMode}>Exit Selection</button>
+                        <img src='/close_24dp_FILL0_wght300_GRAD200_opsz24.svg' alt='Close' onClick={toggleSelectionMode} />
+                        <img src='/delete_24dp_FILL0_wght300_GRAD200_opsz24.svg' alt='Delete' onClick={handleDeletion} />
+                    </div>
+                )}
+                {showPopup && (
+                    <div className='popup'>
+                        <div className='popup-content'>
+                            <h4>Delete Messages</h4>
+                            <p>Are you sure you want to delete the selected messages?</p>
+                            <button onClick={handleDeleteMessagesForMe}>Delete for Me</button>
+                            {messageType === 'sentByMe' ? (
+                                <button onClick={handleDeleteMessagesForEveryone}>Delete for Everyone</button>
+                            ) : null}
+                            <button onClick={() => setShowPopup(false)}>Cancel</button>
+                        </div>
                     </div>
                 )}
             </div>

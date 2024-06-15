@@ -31,7 +31,6 @@ exports.getRoomdata = async (req, res) => {
 		// Fetch messages and active users
 		const messages = await Message.find({
 			room,
-			deletedForEveryone: false,
 			deletedForMe: { $nin: [username] },
 		})
 			.sort({ createdAt: -1 })
