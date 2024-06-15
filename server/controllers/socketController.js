@@ -2,6 +2,7 @@ const Message = require("../models/Message");
 const ActiveUser = require("../models/ActiveUser");
 const Rooms = require("../models/Rooms");
 
+
 // Socket controller for handling socket events
 exports.handleSocketEvents = (io) => {
 	io.on("connection", (socket) => {

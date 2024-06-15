@@ -27,9 +27,7 @@ const ContextMenu = ({
             case 'Delete for me':
                 handleDeleteMessagesForMe();
                 break;
-            case 'Delete for everyone':
-                handleDeleteMessagesForEveryone();
-                break;
+           
            
             default:
                 console.log(`Unhandled action: ${action}`);
@@ -44,7 +42,7 @@ const ContextMenu = ({
                 <li onClick={() => handleItemClick('Select All')}>Select All</li>
                 <li onClick={() => handleItemClick('Deselect All')}>Deselect All</li>
                 <li onClick={() => handleItemClick('Delete for me')}>Delete for me</li>
-                <li onClick={() => handleItemClick('Delete for everyone')}>Delete for everyone</li>
+               
                
             </ul>
         </div>
